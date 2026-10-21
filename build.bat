@@ -18,8 +18,16 @@ if errorlevel 1 exit /b 1
 python -m pip install -r requirements-build.txt
 if errorlevel 1 exit /b 1
 
+echo Close File Type Copier if it is open, then continuing...
+taskkill /IM FileTypeCopier.exe /F >nul 2>&1
+
 python -m PyInstaller --clean --noconfirm file_type_copier.spec
-if errorlevel 1 exit /b 1
+if errorlevel 1 (
+    echo.
+    echo Build failed. If you see "Access is denied" on dist\FileTypeCopier,
+    echo close FileTypeCopier.exe, Explorer windows in that folder, and antivirus scan, then retry.
+    exit /b 1
+)
 
 copy /Y "Run File Type Copier.bat" "dist\FileTypeCopier\" >nul
 if errorlevel 1 (
@@ -31,6 +39,18 @@ if not exist "dist\FileTypeCopier\python314.dll" (
     if not exist "dist\FileTypeCopier\_internal\python314.dll" (
         echo Build finished but python314.dll is missing from dist\FileTypeCopier.
         exit /b 1
+    )
+)
+
+if not exist "dist\FileTypeCopier\base_library.zip" (
+    echo dist\FileTypeCopier is incomplete ^(missing base_library.zip^).
+    echo The folder on disk is not a full PyInstaller build — do not copy it to USB.
+    exit /b 1
+)
+
+if not exist "dist\FileTypeCopier\VCRUNTIME140_1.dll" (
+    for /f "delims=" %%I in ('python -c "import sys, pathlib; print(pathlib.Path(sys.base_prefix) / 'vcruntime140_1.dll')"') do (
+        if exist "%%I" copy /Y "%%I" "dist\FileTypeCopier\VCRUNTIME140_1.dll" >nul
     )
 )
 

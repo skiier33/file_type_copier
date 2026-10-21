@@ -10,6 +10,17 @@ if not exist "FileTypeCopier.exe" (
     exit /b 1
 )
 
+if not exist "base_library.zip" (
+    echo This folder is an incomplete build ^(missing base_library.zip and other runtime files^).
+    echo.
+    echo On your PC, close the app and run build.bat again, then copy the NEW
+    echo dist\FileTypeCopier folder ^(hundreds of files, not ~20^) to the USB drive.
+    echo.
+    echo Do NOT run: build\file_type_copier\FileTypeCopier.exe
+    pause
+    exit /b 1
+)
+
 if exist "_internal\python314.dll" goto :launch
 if exist "python314.dll" goto :launch
 
