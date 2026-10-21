@@ -8,7 +8,13 @@ a = Analysis(
     pathex=[],
     binaries=[],
     datas=[],
-    hiddenimports=["copy_files", "csv_export", "file_matcher"],
+    hiddenimports=[
+        "copy_files",
+        "csv_export",
+        "file_matcher",
+        "regex_pattern_builder",
+        "regex_builder_dialog",
+    ],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
@@ -40,6 +46,8 @@ exe = EXE(
     version="version_info.txt",
     uac_admin=False,
     uac_uiaccess=False,
+    # Flat folder next to the exe (easier on USB; avoids running the incomplete build\ copy).
+    contents_directory=".",
 )
 
 coll = COLLECT(

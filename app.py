@@ -11,6 +11,7 @@ from typing import Literal, Optional
 from copy_files import CopyProgress, copy_file_list, filter_sources_not_in_dest
 from csv_export import save_paths_csv
 from file_matcher import MatchMode, SearchProgress, find_matching_files
+from regex_builder_dialog import RegexBuilderDialog
 
 OperationKind = Literal["search", "copy"]
 
@@ -30,6 +31,7 @@ class FileTypeCopierApp(tk.Tk):
         self._cancel_event = threading.Event()
         self._active_operation: Optional[OperationKind] = None
         self._busy = False
+        self._regex_builder: Optional[RegexBuilderDialog] = None
 
         self._build_ui()
 
@@ -51,9 +53,17 @@ class FileTypeCopierApp(tk.Tk):
         # Pattern
         ttk.Label(main, text="Search pattern:").grid(row=1, column=0, sticky=tk.W, **pad)
         self.pattern_var = tk.StringVar(value="*.pdf")
-        ttk.Entry(main, textvariable=self.pattern_var, width=56).grid(
-            row=1, column=1, sticky=tk.EW, **pad
+        pattern_row = ttk.Frame(main)
+        pattern_row.grid(row=1, column=1, sticky=tk.EW, **pad)
+        pattern_row.columnconfigure(0, weight=1)
+        ttk.Entry(pattern_row, textvariable=self.pattern_var).grid(
+            row=0, column=0, sticky=tk.EW
         )
+        ttk.Button(
+            pattern_row,
+            text="Keyword builder…",
+            command=self._open_regex_builder,
+        ).grid(row=0, column=1, padx=(8, 0))
         mode_frame = ttk.Frame(main)
         mode_frame.grid(row=1, column=2, sticky=tk.W, **pad)
         self.match_mode_var = tk.StringVar(value="glob")
@@ -278,6 +288,22 @@ class FileTypeCopierApp(tk.Tk):
             lines.append("CSV not modified.")
 
         self.pre_copy_status_var.set("\n".join(lines))
+
+    def _open_regex_builder(self) -> None:
+        if self._regex_builder is not None and self._regex_builder.winfo_exists():
+            self._regex_builder.lift()
+            self._regex_builder.focus_set()
+            return
+
+        def on_apply(pattern: str) -> None:
+            self.pattern_var.set(pattern)
+            self.match_mode_var.set("regex")
+
+        self._regex_builder = RegexBuilderDialog(
+            self,
+            on_apply=on_apply,
+            initial_extension="pdf",
+        )
 
     def _browse_search_dir(self) -> None:
         path = filedialog.askdirectory(title="Select directory to search")
